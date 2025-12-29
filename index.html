@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>GEX Dynamic Stop Loss Calculator (SlowYield BUFFER)</title>
+    <title>GEX Dynamic Stop-Loss Calculator (SlowYield BUFFER)</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 1200px; margin: 50px auto; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
         .main-container { display: flex; gap: 30px; }
@@ -32,30 +32,32 @@
 </head>
 <body>
     <div class="main-container">
-        <!-- Left Calculator -->
+        <!-- Calculator -->
         <div class="calculator">
-            <h1>🎯SlowYield Data Academy (SYDA) OY GEX Dynamic Stop Loss Calculator</h1>
+            <h1>🎯 GEX Dynamic Stop-Loss Calculator</h1>
             
             <div class="input-group">
                 <label>Contract:</label>
                 <select id="contract" onchange="updatePointValue()">
                     <option value="MES">MES ($5/pt)</option>
                     <option value="ES">ES ($50/pt)</option>
+                    <option value="MNQ">MNQ ($2/pt)</option>
+                    <option value="NQ">NQ ($20/pt)</option>
                 </select>
             </div>
             
             <div class="input-group">
-                <label>Current Price:</label>
-                <input type="number" id="price" value="5025" step="0.25">
+                <label>Entry Price:</label>
+                <input type="number" id="price" value="20500" step="0.25">
             </div>
             
             <div class="input-group">
-                <label>ATR (pts):</label>
-                <input type="number" id="atr" value="12" step="0.1">
+                <label>ATR (points):</label>
+                <input type="number" id="atr" value="180" step="0.1">
             </div>
             
             <div class="input-group">
-                <label>Single R Value ($):</label>
+                <label>Risk Amount ($):</label>
                 <input type="number" id="risk_dollar" value="625" step="25">
             </div>
             
@@ -63,7 +65,7 @@
                 <label>GEX Zone:</label>
                 <select id="gex_zone">
                     <option value="pos">Positive GEX Core</option>
-                    <option value="trans">Transition/0GEX</option>
+                    <option value="trans">Transition/Zero GEX</option>
                     <option value="neg">Negative GEX</option>
                 </select>
             </div>
@@ -85,23 +87,23 @@
             </div>
             
             <div class="input-group">
-                <label>Buffer (pts):</label>
+                <label>Buffer (points):</label>
                 <input type="number" id="buffer" value="3" step="0.1">
             </div>
             
-            <button onclick="calculateSL()">🚀 Calculate Stop Loss & Position Size</button>
+            <button onclick="calculateSL()">🚀 Calculate Stop-Loss & Position Size</button>
             
             <div id="result" class="result" style="display: none;">
-                <h3>📊 Precise Risk Management Results</h3>
+                <h3>📊 Precision Risk Results</h3>
                 <div id="result-content"></div>
                 <div id="risk-table" class="risk-table"></div>
                 <div id="formula" class="formula"></div>
             </div>
         </div>
         
-        <!-- Right Smart Recommendation Panel -->
+        <!-- Smart Recommendations Sidebar -->
         <div class="sidebar">
-            <h2>💡 BUFFER (SYDA) OY Recommendations</h2>
+            <h2>💡 BUFFER Recommendations</h2>
             
             <div class="buffer-recommend" id="buffer-recommend">
                 Enter parameters for instant recommendations...
@@ -109,26 +111,26 @@
             
             <div class="buffer-table">
                 <table>
-                    <tr><th>📅 Market Condition</th><th>Recommended Buffer</th></tr>
+                    <tr><th>📅 Market Condition</th><th>Buffer Suggestion</th></tr>
                     <tr><td>Normal Trading Day</td><td><strong>0-2 pts</strong></td></tr>
                     <tr><td>FOMC/ER/OPEX/Data Release</td><td><strong>3-5 pts</strong></td></tr>
-                    <tr><td>Opening Session</td><td><strong>2-4 pts</strong></td></tr>
+                    <tr><td>Market Open</td><td><strong>2-4 pts</strong></td></tr>
                     <tr><td>GEX Key Level</td><td><strong>1-3 pts</strong></td></tr>
-                    <tr><td>Month/Quarter End Friday/High Vol Day</td><td><strong>4-6 pts</strong></td></tr>
+                    <tr><td>Month/Quarter End Friday</td><td><strong>4-6 pts</strong></td></tr>
                 </table>
             </div>
             
             <div class="sidebar-tip">
                 💡 <strong>Quick Rules:</strong><br>
                 • Mon-Thu: <strong>Buffer=2</strong><br>
-                • Month/Quarter End Fri/Open/OPEX/High Vol Day: <strong>Buffer=4</strong><br>
-                • FOMC/Major Data Events: <strong>Buffer=6</strong>
+                • Month-end Fri/Open/OPEX/High Vol: <strong>Buffer=4</strong><br>
+                • FOMC/Major Events: <strong>Buffer=6</strong>
             </div>
             
             <div class="sidebar-tip">
-                🎯 <strong>Buffer Purpose:</strong><br>
+                🎯 <strong>Buffer Function:</strong><br>
                 Stop Distance = GEX Formula + Buffer<br>
-                <em>Add 3 pts = Add 3 pts safety margin!</em>
+                <em>All 4 contracts fully supported!</em>
             </div>
         </div>
     </div>
@@ -138,21 +140,23 @@
 
         function updatePointValue() {
             const contract = document.getElementById('contract').value;
-            pointValue = contract === 'MES' ? 5 : 50;
+            if (contract === 'MES') pointValue = 5;
+            else if (contract === 'ES') pointValue = 50;
+            else if (contract === 'MNQ') pointValue = 2;
+            else if (contract === 'NQ') pointValue = 20;  // NQ $20/pt
             updateBufferRecommendation();
         }
 
         function updateBufferRecommendation() {
             const atr = parseFloat(document.getElementById('atr').value) || 12;
             const gexZone = document.getElementById('gex_zone').value;
-            const tradeType = document.getElementById('trade_type').value;
             
-            let recommendation = 'Recommended: ';
-            if (gexZone === 'pos') recommendation += ' <strong>1-2pts</strong> (Positive GEX Stable)';
-            else if (gexZone === 'neg') recommendation += ' <strong>3-5pts</strong> (Negative GEX High Vol)';
-            else recommendation += ' <strong>2-4pts</strong> (Transition Uncertain)';
+            let recommendation = 'Recommendation: ';
+            if (gexZone === 'pos') recommendation += '<strong>1-2 pts</strong> (Positive GEX Stable)';
+            else if (gexZone === 'neg') recommendation += '<strong>3-5 pts</strong> (Negative GEX Volatile)';
+            else recommendation += '<strong>2-4 pts</strong> (Transition Uncertain)';
             
-            recommendation += ` | Dynamic: 0.25×ATR(${Math.round(atr*0.25*10)/10}pts)`;
+            recommendation += ` | Dynamic: 0.25×ATR(${Math.round(atr*0.25*10)/10} pts)`;
             
             document.getElementById('buffer-recommend').innerHTML = recommendation;
         }
@@ -167,9 +171,9 @@
             const contract = document.getElementById('contract').value;
             const buffer = parseFloat(document.getElementById('buffer').value) || 0;
 
-            // GEX Zone Width (ATR Multiplier)
+            // GEX zone multipliers (ATR factor)
             const zoneMultipliers = { pos: 0.8, trans: 1.2, neg: 2.0 };
-            // Risk Multipliers
+            // Stop multipliers
             const riskMultipliers = {
                 revert: { pos: 0.8, trans: 1.0, neg: 1.2 },
                 breakout: { pos: 1.0, trans: 1.2, neg: 1.5 }
@@ -179,33 +183,33 @@
             const kRisk = riskMultipliers[tradeType][gexZone];
             const slDistance = Math.round((kRisk * atr + buffer) * 10) / 10;
 
-            // Precise Position Sizing
+            // Position sizing
             const contracts = Math.max(1, Math.floor(riskDollar / (slDistance * pointValue)));
             const actualRisk = contracts * slDistance * pointValue;
             const perContractRisk = slDistance * pointValue;
 
-            // Exact Stop Price = Entry Price ± Stop Distance
+            // Exact stop price = Entry ± Stop Distance
             const slPrice = direction === 'short' ? price + slDistance : price - slDistance;
 
-            // Display Results
+            // Display results
             document.getElementById('result-content').innerHTML = `
                 <p><strong>Stop Distance:</strong> <span style="color: #00ff88; font-size: 24px;">${slDistance} pts</span></p>
                 <p><strong>Exact Stop Price:</strong> <span class="stop-price">${slPrice.toFixed(1)}</span></p>
-                <p><strong>Recommended Position:</strong> <span style="color: #00ff88; font-size: 24px;">${contracts} ${contract} contracts</span></p>
+                <p><strong>Position Size:</strong> <span style="color: #00ff88; font-size: 24px;">${contracts} ${contract} contracts</span></p>
             `;
 
             document.getElementById('risk-table').innerHTML = `
                 <table>
                     <tr><th>Risk Item</th><th>Amount ($)</th></tr>
-                    <tr><td>Your R Value Setting</td><td><strong>${riskDollar}</strong></td></tr>
+                    <tr><td>Your R Value Target</td><td><strong>${riskDollar}</strong></td></tr>
                     <tr><td>Actual Total Risk</td><td style="color: ${actualRisk <= riskDollar ? '#00ff88' : '#ff6b6b'}">${actualRisk.toFixed(0)}</td></tr>
-                    <tr><td>Per Contract Risk</td><td>${perContractRisk.toFixed(0)}</td></tr>
+                    <tr><td>Per Contract Risk</td><td>$${perContractRisk.toFixed(0)} (${contract})</td></tr>
                 </table>
             `;
 
             document.getElementById('formula').innerHTML = `
-                💡 Formula: ${kRisk.toFixed(1)} × ATR(${atr}) + Buffer(${buffer}) = ${slDistance}pts<br>
-                📍 Exact Stop = Entry ${direction === 'short' ? '+' : '-'} ${slDistance}pts = ${slPrice.toFixed(1)}<br>
+                💡 Formula: ${kRisk.toFixed(1)} × ATR(${atr}) + Buffer(${buffer}) = ${slDistance} pts<br>
+                📍 Stop Price = Entry ${direction === 'short' ? '+' : '-'} ${slDistance} pts = ${slPrice.toFixed(1)}<br>
                 💰 Position: ${riskDollar} ÷ (${slDistance} × $${pointValue}) = ${contracts} contracts<br>
                 🎯 ${gexZone.toUpperCase()} Zone, ${tradeType} ${direction} Strategy
             `;
@@ -214,7 +218,7 @@
             document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
         }
 
-        // Real-time Updates + Enter Key
+        // Real-time updates + Enter key
         document.addEventListener('input', updateBufferRecommendation);
         document.addEventListener('change', updateBufferRecommendation);
         document.addEventListener('keypress', function(e) {
